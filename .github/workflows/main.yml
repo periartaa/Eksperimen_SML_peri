@@ -23,26 +23,28 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas scikit-learn
         
-    # PENTING: Buat folder output yang akan digunakan oleh script
-    - name: Create Output Folder
+    - name: Create Directory Structure
       run: |
+        mkdir -p namadataset_raw
         mkdir -p preprocessing/iris_preprocessing
-
-    - name: Run Preprocessing Script
-      id: run_script
-      run: |
-        # Definisi PATH menggunakan ${{ github.workspace }} untuk path ABSOLUT
-        RAW_PATH=${{ github.workspace }}/namadataset_raw/Iris.csv
-        OUTPUT_DIR=${{ github.workspace }}/preprocessing/iris_preprocessing
         
-        # Jalankan script dengan argumen path ABSOLUT
-        # Pastikan nama script sesuai: automate_peri.py
-        python preprocessing/automate_peri.py "$RAW_PATH" "$OUTPUT_DIR"
+    - name: Download Sample Dataset (Jika file tidak ada di repo)
+      run: |
+        # Jika file Iris.csv tidak ada di repository, download sample
+        if [ ! -f "namadataset_raw/Iris.csv" ]; then
+          wget -O namadataset_raw/Iris.csv "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+          echo "Sample Iris dataset downloaded"
+        else
+          echo "Iris.csv already exists"
+        fi
+        
+    - name: Run Preprocessing Script
+      run: |
+        python preprocessing/automate_peri.py
         
     - name: Upload Processed Dataset Artifact
       uses: actions/upload-artifact@v4
       with:
         name: processed-iris-data
-        # Path ini harus sesuai dengan output_dir + nama file
         path: preprocessing/iris_preprocessing/iris_processed_data.csv
         retention-days: 1

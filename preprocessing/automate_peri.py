@@ -1,92 +1,103 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-import numpy as np
 import os
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
-def preprocess_iris_data(raw_file_path: str, output_dir: str):
+def preprocess_iris_data(raw_file_path, output_folder):
     """
-    Melakukan preprocessing data Iris secara otomatis, termasuk:
-    1. Memuat data.
-    2. Menghapus kolom 'Id'.
-    3. Melakukan One-Hot Encoding pada kolom 'Species'.
-    4. Memisahkan data menjadi fitur (X) dan target (y).
-    5. Menyimpan data yang sudah diproses.
-    
-    Args:
-        raw_file_path (str): Path lengkap menuju file CSV mentah (Iris.csv).
-        output_dir (str): Folder untuk menyimpan file CSV hasil preprocessing.
+    Preprocess Iris dataset
     """
-    # 1. Muat Data
-    print(f"Memuat data dari: {raw_file_path}")
-    df = pd.read_csv(raw_file_path)
+    try:
+        # Cek apakah file exists
+        if not os.path.exists(raw_file_path):
+            # Coba path alternatif
+            alt_path = os.path.join(os.getcwd(), 'namadataset_raw', 'Iris.csv')
+            if os.path.exists(alt_path):
+                raw_file_path = alt_path
+                print(f"File ditemukan di: {alt_path}")
+            else:
+                raise FileNotFoundError(f"File tidak ditemukan: {raw_file_path}")
+        
+        print(f"Memuat data dari: {raw_file_path}")
+        
+        # Load dataset
+        df = pd.read_csv(raw_file_path)
+        print(f"Data berhasil dimuat. Shape: {df.shape}")
+        
+        # Pastikan output folder exists
+        os.makedirs(output_folder, exist_ok=True)
+        
+        # Data cleaning
+        print("Melakukan data cleaning...")
+        
+        # Hapus duplikat
+        initial_count = len(df)
+        df = df.drop_duplicates()
+        final_count = len(df)
+        print(f"Duplikat dihapus: {initial_count - final_count} baris")
+        
+        # Handle missing values
+        missing_values = df.isnull().sum().sum()
+        if missing_values > 0:
+            print(f"Missing values ditemukan: {missing_values}")
+            # Untuk numerical columns, fill dengan median
+            numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns
+            df[numerical_cols] = df[numerical_cols].fillna(df[numerical_cols].median())
+            
+            # Untuk categorical columns, fill dengan mode
+            categorical_cols = df.select_dtypes(include=['object']).columns
+            for col in categorical_cols:
+                if df[col].isnull().sum() > 0:
+                    df[col] = df[col].fillna(df[col].mode()[0])
+        
+        # Feature engineering
+        print("Melakukan feature engineering...")
+        
+        # Jika ada kolom species, encode
+        if 'species' in df.columns:
+            le = LabelEncoder()
+            df['species_encoded'] = le.fit_transform(df['species'])
+            print(f"Species encoded: {dict(zip(le.classes_, le.transform(le.classes_)))}")
+        
+        # Normalisasi numerical features
+        numerical_features = df.select_dtypes(include=['float64', 'int64']).columns
+        # Exclude target variable jika ada
+        if 'species_encoded' in numerical_features:
+            numerical_features = numerical_features.drop('species_encoded')
+        
+        if len(numerical_features) > 0:
+            scaler = StandardScaler()
+            df[numerical_features] = scaler.fit_transform(df[numerical_features])
+            print(f"Features dinormalisasi: {list(numerical_features)}")
+        
+        # Simpan processed data
+        output_path = os.path.join(output_folder, 'iris_processed_data.csv')
+        df.to_csv(output_path, index=False)
+        print(f"Data berhasil diproses dan disimpan di: {output_path}")
+        print(f"Final data shape: {df.shape}")
+        print("\nData preview:")
+        print(df.head())
+        print("\nData info:")
+        print(df.info())
+        
+        return df
+        
+    except Exception as e:
+        print(f"Error selama preprocessing: {str(e)}")
+        raise
 
-    # 2. Hapus Kolom 'Id' (Sesuai praktik umum)
-    df = df.drop('Id', axis=1)
-
-    # 3. Definisikan Kolom Target dan Fitur
-    # Kolom fitur adalah semua kolom kecuali 'Species'
-    X = df.drop('Species', axis=1)
-    # Kolom target adalah 'Species' (yang akan di-encode)
-    y = df['Species'] 
-
-    # --- Konversi Tahapan Manual ke Struktur Otomatis (ColumnTransformer & Pipeline) ---
-    
-    # Karena di notebook hanya ada One-Hot Encoding, kita hanya perlu satu transformer
-    
-    # Tentukan fitur yang akan di-transformasi (hanya kolom kategorikal 'Species')
-    # Catatan: Kita memproses target 'Species' di sini untuk menghasilkan kolom biner
-    
-    # Definisikan transformer untuk One-Hot Encoding
-    ohe_transformer = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
-    
-    # Gunakan ColumnTransformer untuk menerapkan OHE ke kolom 'Species'
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('ohe', ohe_transformer, ['Species'])
-        ],
-        # Passthrough/drop tidak diperlukan di sini karena kita hanya memproses 'Species'
-        # dan akan memisahkannya menjadi target y
-        remainder='drop' 
-    )
-    
-    # --- Terapkan Transformasi pada Target (y) ---
-    print("Menerapkan One-Hot Encoding pada target 'Species'...")
-    y_encoded = preprocessor.fit_transform(y.to_frame())
-    
-    # Buat DataFrame dari hasil encoding untuk kolom target (y)
-    # Gunakan nama kolom yang dihasilkan oleh OneHotEncoder
-    target_names = preprocessor.get_feature_names_out(['Species'])
-    y_encoded_df = pd.DataFrame(y_encoded, columns=target_names)
-    
-    # Gabungkan Fitur (X) dan Target (y_encoded) yang sudah siap dilatih
-    X.reset_index(drop=True, inplace=True)
-    final_df = pd.concat([X, y_encoded_df], axis=1)
-    
-    print("Preprocessing selesai. Data siap dilatih.")
-    
-    # --- Simpan Data Hasil Preprocessing ---
-    os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, 'iris_processed_data.csv')
-    
-    final_df.to_csv(output_path, index=False)
-    print(f"\nData yang diproses disimpan di: {output_path}")
-    print(f"Shape data akhir: {final_df.shape}")
-
-# --- Bagian Main (Untuk menjalankan script dan menyimpan hasilnya) ---
 if __name__ == "__main__":
-    # Sesuaikan path ini dengan lokasi file Anda di sistem lokal/GitHub
-    # Contoh path relatif (mengikuti struktur repository)
+    # Gunakan path relatif yang lebih reliable
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(current_dir)
     
-    # CATATAN: Ganti 'Nama-siswa' dengan nama Anda yang sebenarnya!
-    # Lokasi file mentah
-    RAW_FILE_LOCATION = '../namadataset_raw/Iris.csv'
+    # Define paths
+    RAW_FILE_PATH = os.path.join(repo_root, 'namadataset_raw', 'Iris.csv')
+    OUTPUT_FOLDER = os.path.join(current_dir, 'iris_preprocessing')
     
-    # Lokasi folder output hasil preprocessing
-    OUTPUT_FOLDER = '../preprocessing/iris_preprocessing' 
-
-    # Panggil fungsi utama
-    # Pastikan file Iris.csv sudah ada di '../namadataset_raw/'
-    preprocess_iris_data(RAW_FILE_LOCATION, OUTPUT_FOLDER)
+    print(f"Current directory: {current_dir}")
+    print(f"Repo root: {repo_root}")
+    print(f"Raw file path: {RAW_FILE_PATH}")
+    print(f"Output folder: {OUTPUT_FOLDER}")
+    
+    # Jalankan preprocessing
+    preprocess_iris_data(RAW_FILE_PATH, OUTPUT_FOLDER)
