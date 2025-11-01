@@ -15,13 +15,13 @@ def load_iris_data(input_path):
     """
     try:
         df = pd.read_csv(input_path)
-        print("✅ Dataset berhasil dimuat")
+        print(" Dataset berhasil dimuat")
         return df
     except FileNotFoundError:
-        print(f"❌ File tidak ditemukan: {input_path}")
+        print(f" File tidak ditemukan: {input_path}")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Error saat memuat dataset: {e}")
+        print(f" Error saat memuat dataset: {e}")
         sys.exit(1)
 
 def exploratory_data_analysis(df):
@@ -88,20 +88,20 @@ def preprocess_iris_data(df):
     # 1. Hapus kolom 'Id' jika ada (tidak diperlukan untuk modeling)
     if 'Id' in df_processed.columns:
         df_processed = df_processed.drop('Id', axis=1)
-        print("✅ Kolom 'Id' dihapus")
+        print("Kolom 'Id' dihapus")
     
     # 2. One-Hot Encoding untuk kolom 'Species'
     if 'Species' in df_processed.columns:
         df_processed = pd.get_dummies(df_processed, columns=['Species'], prefix='Species')
-        print("✅ One-Hot Encoding untuk 'Species' selesai")
+        print("One-Hot Encoding untuk 'Species' selesai")
     
     # 3. Konversi boolean ke integer (opsional, untuk beberapa model ML)
     bool_columns = df_processed.select_dtypes(include='bool').columns
     if len(bool_columns) > 0:
         df_processed[bool_columns] = df_processed[bool_columns].astype(int)
-        print("✅ Konversi boolean ke integer selesai")
+        print("Konversi boolean ke integer selesai")
     
-    print(f"✅ Preprocessing selesai. Shape akhir: {df_processed.shape}")
+    print(f"Preprocessing selesai. Shape akhir: {df_processed.shape}")
     
     return df_processed
 
@@ -119,7 +119,7 @@ def save_processed_data(df_processed, output_path):
         
         # Simpan dataframe
         df_processed.to_csv(output_path, index=False)
-        print(f"✅ Data berhasil disimpan di: {output_path}")
+        print(f"Data berhasil disimpan di: {output_path}")
         
         # Info file
         file_size = os.path.getsize(output_path) / 1024  # dalam KB
@@ -127,13 +127,13 @@ def save_processed_data(df_processed, output_path):
         print(f"   - Shape data: {df_processed.shape}")
         
     except Exception as e:
-        print(f"❌ Error saat menyimpan data: {e}")
+        print(f"Error saat menyimpan data: {e}")
 
 def main():
     """
     Fungsi utama untuk menjalankan seluruh pipeline
     """
-    print("🚀 MEMULAI AUTOMATED PREPROCESSING IRIS DATASET")
+    print("MEMULAI AUTOMATED PREPROCESSING IRIS DATASET")
     print("="*60)
     
     # Resolve paths relative to this script so the script can be run from
@@ -146,7 +146,7 @@ def main():
     output_path = os.environ.get('OUTPUT_PATH', os.path.join(script_dir, 'iris_preprocessing', 'iris_processed.csv'))
     
     # 1. Load data
-    print(f"\n📥 Memuat data dari: {input_path}")
+    print(f"\n Memuat data dari: {input_path}")
     df_raw = load_iris_data(input_path)
     
     # 2. Exploratory Data Analysis
@@ -156,14 +156,14 @@ def main():
     df_processed = preprocess_iris_data(df_raw)
     
     # 4. Simpan data yang sudah diproses
-    print(f"\n💾 Menyimpan data hasil processing ke: {output_path}")
+    print(f"\n Menyimpan data hasil processing ke: {output_path}")
     save_processed_data(df_processed, output_path)
     
     # 5. Tampilkan preview data hasil processing
-    print("\n🔍 PREVIEW DATA HASIL PROCESSING:")
+    print("\n PREVIEW DATA HASIL PROCESSING:")
     print(df_processed.head())
     
-    print("\n🎯 PIPEINE PREPROCESSING SELESAI!")
+    print("\n PIPEINE PREPROCESSING SELESAI!")
     print("Data siap untuk training model machine learning.")
 
 if __name__ == "__main__":
