@@ -1,0 +1,43 @@
+name: Automated Data Preprocessing
+
+on:
+  push:
+    branches:
+      - main  # Pastikan ini adalah nama branch utama Anda
+  workflow_dispatch: # Untuk menjalankan secara manual
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install Dependencies
+      run: |
+        # Asumsikan Anda menggunakan Pandas dan Scikit-learn
+        python -m pip install --upgrade pip
+        pip install pandas scikit-learn
+        
+    - name: Create Raw Data Structure (Jika belum ada di repo)
+      run: |
+        mkdir -p namadataset_raw
+
+    - name: Run Preprocessing Script
+      id: run_script
+      # PENTING: Ganti 'Nama-siswa' dengan nama file yang sesuai
+      run: |
+        python preprocessing/automate_Nama-siswa.py
+        
+    - name: Upload Processed Dataset Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: processed-iris-data
+        # Path harus sesuai dengan output dari automate_Nama-siswa.py
+        path: preprocessing/iris_preprocessing/iris_processed_data.csv
+        retention-days: 1
