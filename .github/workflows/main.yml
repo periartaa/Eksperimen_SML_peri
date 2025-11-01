@@ -3,8 +3,8 @@ name: Automated Data Preprocessing
 on:
   push:
     branches:
-      - main  # Pastikan ini adalah nama branch utama Anda
-  workflow_dispatch: # Untuk menjalankan secara manual
+      - main
+  workflow_dispatch:
 
 jobs:
   preprocess:
@@ -20,24 +20,29 @@ jobs:
         
     - name: Install Dependencies
       run: |
-        # Asumsikan Anda menggunakan Pandas dan Scikit-learn
         python -m pip install --upgrade pip
         pip install pandas scikit-learn
         
-    - name: Create Raw Data Structure (Jika belum ada di repo)
+    # PENTING: Buat folder output yang akan digunakan oleh script
+    - name: Create Output Folder
       run: |
-        mkdir -p namadataset_raw
+        mkdir -p preprocessing/iris_preprocessing
 
     - name: Run Preprocessing Script
       id: run_script
-      # PENTING: Ganti 'Nama-siswa' dengan nama file yang sesuai
       run: |
-        python preprocessing/automate_peri.py
+        # Definisi PATH menggunakan ${{ github.workspace }} untuk path ABSOLUT
+        RAW_PATH=${{ github.workspace }}/namadataset_raw/Iris.csv
+        OUTPUT_DIR=${{ github.workspace }}/preprocessing/iris_preprocessing
+        
+        # Jalankan script dengan argumen path ABSOLUT
+        # Pastikan nama script sesuai: automate_peri.py
+        python preprocessing/automate_peri.py "$RAW_PATH" "$OUTPUT_DIR"
         
     - name: Upload Processed Dataset Artifact
       uses: actions/upload-artifact@v4
       with:
         name: processed-iris-data
-        # Path harus sesuai dengan output dari automate_Nama-siswa.py
+        # Path ini harus sesuai dengan output_dir + nama file
         path: preprocessing/iris_preprocessing/iris_processed_data.csv
         retention-days: 1
