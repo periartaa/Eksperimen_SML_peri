@@ -92,17 +92,15 @@ def train_model(df):
         
     print("\n🎯 Model Training Selesai! Cek MLflow Tracking UI.")
 
-# HAPUS (atau ubah total) bagian path resolution di main()
+# Di modelling.py (Menggunakan Path Absolut untuk menghindari masalah)
 def main():
     """
     Fungsi utama untuk menjalankan pipeline modeling.
     """
     
-    # 🌟 GANTI DENGAN PATH RELATIF YANG BENAR 🌟
-    # Asumsikan data processed ada di: iris_preprocessing/iris_processed.csv
-    # Path ini relatif terhadap root project (Eksperimen_SML_periart)
-    # Sesuaikan jika lokasi Anda berbeda!
-    processed_file_path = 'iris_preprocessing/iris_processed.csv' 
+    # 🌟 GANTI DENGAN PATH LOKASI SEBENARNYA 🌟
+    # Sesuaikan path ini jika Anda ingin mengarahkan ke lokasi spesifik.
+    processed_file_path = r'C:\Peri\DICODING\ACCOUNT StudentPro\Eksperimen_SML_periart\preprocessing\iris_preprocessing\iris_processed.csv' # Sesuaikan ini!
     
     # 1. Load data
     df_processed = load_processed_data(processed_file_path)
