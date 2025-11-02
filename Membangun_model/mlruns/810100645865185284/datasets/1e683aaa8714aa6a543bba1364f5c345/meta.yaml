@@ -1,0 +1,10 @@
+digest: 5af9d703
+name: dataset
+profile: '{"num_rows": 105, "num_elements": 420}'
+schema: '{"mlflow_colspec": [{"type": "double", "name": "SepalLengthCm", "required":
+  true}, {"type": "double", "name": "SepalWidthCm", "required": true}, {"type": "double",
+  "name": "PetalLengthCm", "required": true}, {"type": "double", "name": "PetalWidthCm",
+  "required": true}]}'
+source: '{"tags": {"mlflow.user": "Asus", "mlflow.source.name": "modelling.py", "mlflow.source.type":
+  "LOCAL", "mlflow.source.git.commit": "9d6e609552d27bfdb3974c7ceb41671a28704ff7"}}'
+source_type: code
