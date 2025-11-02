@@ -1,7 +1,7 @@
 name: Automated Data Preprocessing
 
 on:
-  push:
+  push: 
     branches:
       - main
   workflow_dispatch:
